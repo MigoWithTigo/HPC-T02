@@ -1,0 +1,10 @@
+*.out
+serial
+algo1_omp
+algo2_omp
+venv/
+__pycache__/
+*.pyc
+*.aux
+*.log
+.auctex-auto/

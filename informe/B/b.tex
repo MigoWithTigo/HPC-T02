@@ -1,0 +1,11 @@
+\section{Algoritmo 1: paralelismo de datos}
+A continuación se muestran los resultados de \emph{speedup} y \emph{eficiencia} de ambos computadores:
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{B/exp_b_plots.pdf}
+    \caption{Resultados de Speedup y Eficiencia (Local vs. Remoto) usando OpenMP para paralelismo de datos.}
+    \label{fig:exp_b_plots}
+  \end{figure}
+
+Notemos que PC2 se mantiene muy cercano a 1, esto se debe a que solo tiene 2 núcleos físicos y solo dos hilos por cada uno, entonces superar este número solo causará mayor overhead en cambiar y coordinar los hilos.
