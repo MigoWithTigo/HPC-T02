@@ -1,0 +1,71 @@
+\section{Comparación de Rendimiento en Segundo Computador}
+\label{sec:segundo_computador}
+
+\subsection{Declaración de Especificaciones Técnicas}
+En conformidad con las instrucciones del enunciado, los experimentos se llevaron a cabo de manera cruzada en dos computadores con arquitecturas marcadamente distintas. La Tabla~\ref{tab:especificaciones_hardware} detalla las especificaciones técnicas de ambos procesadores, incluyendo el recuento de núcleos físicos y lógicos, frecuencias de reloj, jerarquía de memorias caché y perfiles térmicos.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\caption{Especificaciones técnicas del hardware de los computadores evaluados.}
+\label{tab:especificaciones_hardware}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Característica} & \textbf{PC1 (Local)} & \textbf{PC2 (Remoto)} \\
+\midrule
+Modelo de Procesador       & AMD Ryzen 7 PRO 7840U & Intel Core i5-4210U \\
+Microarquitectura          & AMD Zen 4 (Phoenix)   & Intel Haswell \\
+Litografía                 & \SI{4}{\nano\meter} FinFET (TSMC) & \SI{22}{\nano\meter} (Intel) \\
+Núcleos Físicos            & 8                     & 2 \\
+Núcleos Lógicos (Hilos)    & 16 (SMT)              & 4 (Hyper-Threading) \\
+Frecuencia Base            & \SI{3.30}{\giga\hertz}& \SI{1.70}{\giga\hertz} \\
+Frecuencia Turbo/Boost Máx.& \SI{5.10}{\giga\hertz}& \SI{2.70}{\giga\hertz} (1 core) / \SI{2.40}{\giga\hertz} (2 cores) \\
+Caché L1 (Instrucción+Datos)& \SI{512}{\kibi\byte} (\SI{64}{\kibi\byte}/core) & \SI{128}{\kibi\byte} (\SI{64}{\kibi\byte}/core) \\
+Caché L2 Privada           & \SI{8}{\mebi\byte} (\SI{1}{\mebi\byte}/core)     & \SI{512}{\kibi\byte} (\SI{256}{\kibi\byte}/core) \\
+Caché L3 Compartida        & \SI{16}{\mebi\byte}   & \SI{3}{\mebi\byte} SmartCache \\
+Tipo de Memoria RAM        & LPDDR5 / DDR5         & DDR3L-1600 \\
+TDP (Diseño Térmico)       & \SI{15}{\watt} -- \SI{30}{\watt} (Típico \SI{28}{\watt}) & \SI{15}{\watt} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Comparación Global de Rendimiento}
+La Tabla~\ref{tab:resumen_comparativo_pcs} sintetiza los tiempos de ejecución, factores de aceleración (\emph{speedup}) y eficiencia alcanzados en ambos equipos para una matriz de $N=2048$ a través de las tres implementaciones paralelas estudiadas.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Comparación de rendimiento entre PC1 y PC2 ($N=2048$).}
+\label{tab:resumen_comparativo_pcs}
+\begin{tabular}{l cccc cccc}
+\toprule
+& \multicolumn{4}{c}{\textbf{PC1 Local (Ryzen 7 7840U)}} & \multicolumn{4}{c}{\textbf{PC2 Remoto (Core i5-4210U)}} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9}
+\textbf{Algoritmo} & $T(1)$ (ms) & $T(8)$ (ms) & $S(8)$ & $E(8)$ & $T(1)$ (ms) & $T(8)$ (ms) & $S(8)$ & $E(8)$ \\
+\midrule
+Base Serial (Caso Óptimo)  & 1483.54 & -- & -- & -- & 4553.88 & -- & -- & -- \\
+Algoritmo 1 (OpenMP Loops) & 4579.82 & 1179.62 & 3.88 & 0.49 & 6271.94 & 6143.11 & 1.02 & 0.13 \\
+Algoritmo 2 (D\&C, $n=256$)& 1195.60 &  313.49 & 3.81 & 0.48 & 4371.64 & 4543.87 & 0.96 & 0.12 \\
+Algoritmo 3 (Python Numba) & 2014.47 &  523.67 & 3.85 & 0.48 & 5651.67 & 6308.52 & 0.90 & 0.11 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Justificación de las Diferencias de Rendimiento}
+Al comparar el desempeño entre ambas máquinas, se observan diferencias categóricas explicadas por cuatro factores arquitectónicos fundamentales:
+
+\begin{enumerate}
+    \item \textbf{Recuento de núcleos físicos y saturación de Hyper-Threading:}
+    En PC1, la presencia de 8 núcleos físicos reales permite asignar cada hilo a una unidad de ejecución dedicada, alcanzando un escalamiento efectivo cercano a $4\times$ con $p=8$ hilos en todos los algoritmos. Por el contrario, PC2 posee únicamente 2 núcleos físicos reales (4 hilos mediante Hyper-Threading). Al exigir $p=4$ y $p=8$ hilos, las tareas compiten intensamente por los mismos recursos de ejecución (ALUs y puertos de despacho de coma flotante), provocando que el speedup se sature en $p=2$ ($S(2) \approx 1.13\times - 1.19\times$) y decaiga para $p \ge 4$ debido a la sobrecarga de cambio de contexto (\emph{context switching}).
+
+    \item \textbf{Jerarquía y capacidad de memoria caché:}
+    En el Algoritmo 2, el bloque de caso base ($n=256$) ocupa \SI{512}{\kibi\byte}. En PC1, cada núcleo cuenta con \SI{1}{\mebi\byte} de caché L2 privada, por lo que el bloque de trabajo reside íntegramente en la memoria de alta velocidad. En PC2, cada núcleo cuenta con solo \SI{256}{\kibi\byte} de L2 y \SI{3}{\mebi\byte} de L3 compartida, por lo que el conjunto de trabajo desborda continuamente la jerarquía de caché, forzando transacciones constantes hacia la memoria principal RAM.
+
+    \item \textbf{Estrangulamiento térmico y de potencia (\emph{Thermal Throttling}):}
+    El procesador Intel Core i5-4210U opera con un presupuesto de potencia sumamente restrictivo de \SI{15}{\watt} TDP. Al someter ambos núcleos al \SI{100}{\percent} de carga continua con operaciones matriciales intensivas de punto flotante, el sistema de gestión térmica se ve forzado a reducir drásticamente la frecuencia de reloj (\emph{downclocking}) desde el Turbo mononúcleo (\SI{2.70}{\giga\hertz}) hacia su frecuencia base (\SI{1.70}{\giga\hertz}) o inferior, penalizando el rendimiento en pruebas multitarea prolongadas. En cambio, el Ryzen 7 cuenta con un TDP de hasta \SI{30}{\watt} y una litografía de \SI{4}{\nano\meter} con alta eficiencia energética por vatio, manteniendo frecuencias sostenidas superiores a \SI{3.5}{\giga\hertz} bajo carga completa.
+
+    \item \textbf{Salto generacional de microarquitectura y ancho de banda:}
+    Entre la microarquitectura Haswell (2014, \SI{22}{\nano\meter}) y Zen 4 (2023, \SI{4}{\nano\meter}) transcurre casi una década de avances en diseño de procesadores. Zen 4 ofrece un incremento sustancial en el número de instrucciones por ciclo (IPC), colas de reordenamiento de mayor tamaño y soporte integral para extensiones vectoriales AVX-512/FMA con baja latencia. Además, el ancho de banda del subsistema de memoria DDR5/LPDDR5 de PC1 ($>$\SI{50}{\giga\byte\per\second}) duplica holgadamente al de la memoria DDR3L-1600 de PC2 ($\approx$\SI{25}{\giga\byte\per\second}), reduciendo los tiempos de espera por datos en las tres versiones evaluadas.
+\end{enumerate}
