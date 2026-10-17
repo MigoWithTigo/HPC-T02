@@ -2,7 +2,7 @@
 \label{sec:algo3_numba}
 
 \subsection{Implementación y Warm-up}
-Se implementó en Python el paralelismo de datos sobre la multiplicación densa de $N \times N$ ($N=2048$) empleando Numba con el decorador \texttt{@njit(parallel=True)} y la directiva \texttt{prange} en el bucle exterior. Para evitar incluir el tiempo de compilación JIT e inferencia de tipos en las mediciones, se efectuó una llamada previa de precalentamiento (\emph{warm-up}) con matrices de $64 \times 64$. El control de hilos se realizó dinámicamente mediante \texttt{numba.set\_num\_threads(p)}. El \emph{checksum} verificado fue exactamente $172.331627$, idéntico al de las versiones en C++.
+Se implementó en Python el paralelismo de datos sobre la multiplicación densa de $N \times N$ ($N=2048$) empleando Numba con el decorador \texttt{@njit(parallel=True)} y la directiva \texttt{prange} en el bucle exterior. Para evitar incluir el tiempo de compilación JIT e inferencia de tipos en las mediciones, se realizó una llamada previa de precalentamiento (\emph{warm-up}) con matrices de $64 \times 64$. El control de hilos se realizó dinámicamente mediante \texttt{numba.set\_num\_threads(p)}. El \emph{checksum} verificado fue exactamente $172.331627$, idéntico al de las versiones en C++.
 
 \begin{figure}[htbp]
     \centering
@@ -32,4 +32,4 @@ $p$ & Tiempo (ms) & Speedup $S(p)$ & Eficiencia $E(p)$ & Tiempo (ms) & Speedup $
 \end{table}
 
 \subsection{Comparación con las Otras Versiones}
-En PC1, Numba demostró un rendimiento sobresaliente: a $p=1$ tomó \SI{2014.47}{\milli\second} frente a los \SI{4579.82}{\milli\second} del Algoritmo 1 en C++ con OpenMP (siendo más de $2\times$ más rápido), y a $p=8$ alcanzó \SI{523.67}{\milli\second} ($S(8)=3.85\times$). Esta ventaja frente al C++ ingenuo radica en la capacidad del optimizador LLVM de Numba para vectorizar eficientemente las operaciones sobre registros AVX2/FMA. Sin embargo, el Algoritmo 2 en C++ (dividir y conquistar con $n=256$) continúa siendo el más rápido con \SI{313.49}{\milli\second} a 8 hilos, confirmando que la reestructuración para el aprovechamiento de la memoria caché supera a la paralelización plana de filas.
+En \textbf{PC1}, Numba demostró un rendimiento sobresaliente: $p=1$ tomó \SI{2014.47}{\milli\second} frente a los \SI{4579.82}{\milli\second} del Algoritmo 1 en C++ con OpenMP (siendo más de $2\times$ más rápido), y a $p=8$ alcanzó \SI{523.67}{\milli\second} ($S(8)=3.85\times$). Esta ventaja frente al C++ ingenuo radica en la capacidad del optimizador LLVM de Numba para vectorizar eficientemente las operaciones sobre registros AVX2/FMA. Sin embargo, el Algoritmo 2 en C++ (dividir y conquistar con $n=256$) continúa siendo el más rápido con \SI{313.49}{\milli\second} a 8 hilos, confirmando que la reestructuración para el aprovechamiento de la memoria caché supera a la paralelización plana de filas.

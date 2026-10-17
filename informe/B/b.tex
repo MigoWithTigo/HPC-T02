@@ -2,7 +2,7 @@
 \label{sec:algo1_omp}
 
 \subsection{Implementación}
-Se implementó en C++ el Algoritmo 1 aplicando paralelismo de datos mediante OpenMP sobre el bucle exterior de la multiplicación matricial densa de $N \times N$ ($N=2048$), utilizando la directiva \texttt{\#pragma omp parallel for schedule(static)}. De este modo, las $N$ filas de la matriz resultante $C$ se reparten de manera uniforme y determinista entre los $p$ hilos disponibles. Cada hilo calcula un bloque contiguo de filas independientes de $C$, accediendo a las filas correspondientes de $A$ y a la totalidad de la matriz $B$.
+Se implementó en C++ el Algoritmo 1 aplicando paralelismo de datos mediante OpenMP sobre el bucle exterior de la multiplicación matricial densa de $N \times N$ ($N=2048$), utilizando la directiva \texttt{\#pragma omp parallel for schedule(static)}. De este modo, las $N$ filas de la matriz resultante $C$ se reparten de manera uniforme y determinista entre los $p$ hilos disponibles. Cada hilo calcula un bloque contiguo de filas independientes de $C$, accediendo a las filas correspondientes de $A$ y a la la matriz $B$ en su totalidad.
 
 \begin{figure}[htbp]
     \centering
